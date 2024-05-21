@@ -17,7 +17,7 @@ public class ContaUseCase {// Regras de negocio
         this.emailGateway = emailGateway;
     }
 
-    public void criar(Conta conta) throws Exception {
+    public Conta criar(Conta conta) throws Exception {
         if(contaGateway.buscarPorCpf(conta.getCpf()) != null) {
             throw new ContaJaExisteException("A conta ja existe");
         }
@@ -25,5 +25,7 @@ public class ContaUseCase {// Regras de negocio
         emailGateway.send(conta.getCpf());
 
         contaGateway.salvar(conta);
+
+        return conta;
     }
 }

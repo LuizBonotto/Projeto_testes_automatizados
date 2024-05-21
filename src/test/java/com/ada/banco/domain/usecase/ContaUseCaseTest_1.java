@@ -11,9 +11,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.any;
+
+
 import java.math.BigDecimal;
 
-public class CriarNovaContaTest_1 {
+public class ContaUseCaseTest_1 {
     // Ao criar uma conta ela deve ser salva no banco de dados
     // Deve lancar uma exception caso a conta ja exista
 
@@ -23,8 +31,8 @@ public class CriarNovaContaTest_1 {
 
     @BeforeEach
     public void beforeEach() {
-        contaGateway = Mockito.mock(ContaGateway.class);
-        emailGateway = Mockito.mock(EmailGateway.class);
+        contaGateway = mock(ContaGateway.class);
+        emailGateway = mock(EmailGateway.class);
         contaUseCase = new ContaUseCase(contaGateway, emailGateway);
     }
 
@@ -34,15 +42,16 @@ public class CriarNovaContaTest_1 {
         // Dado
         Conta conta =
                 new Conta(1L, 2L, 3L, BigDecimal.ZERO, "Pedro", "123456789");
-        Mockito.when(contaGateway.buscarPorCpf("123456789")).thenReturn(conta);
+        when(contaGateway.buscarPorCpf("123456789")).thenReturn(conta);
 
         // When
         Throwable throwable = Assertions.assertThrows(ContaJaExisteException.class, () -> contaUseCase.criar(conta));
 
         // Then
         Assertions.assertEquals("A conta ja existe", throwable.getMessage());
-        Mockito.verify(contaGateway, Mockito.never()).salvar(conta);
-        Mockito.verify(emailGateway, Mockito.never()).send("123456789");
+
+        verify(contaGateway, never()).salvar(conta);
+        verify(emailGateway, never()).send("123456789");
     }
 
     @Test
@@ -50,16 +59,23 @@ public class CriarNovaContaTest_1 {
         // Dado
         Conta conta =
                 new Conta(1L, 2L, 3L, BigDecimal.ZERO, "Pedro", "123456789");
-
-        Mockito.when(contaGateway.salvar(conta)).thenReturn(conta);
+        when(contaGateway.buscarPorCpf("123456789")).thenReturn(null);
+        when(contaGateway.salvar(conta)).thenReturn(conta);
 
 
         // Quando// Entao
-        contaUseCase.criar(conta);
+        Conta contaSalva = contaUseCase.criar(conta);
 
-        Mockito.verify(contaGateway, Mockito.times(1)).salvar(conta);
-        Mockito.verify(emailGateway, Mockito.times(1)).send("123456789");
+        verify(contaGateway).salvar(conta);
+
+        verify(contaGateway, times(1)).salvar(conta);
+        verify(emailGateway, times(1)).send(any());
+        verify(emailGateway, times(1)).send("123456789");
+
+        Assertions.assertEquals(conta,contaSalva);
+
     }
 
 
 }
+
